@@ -1,3 +1,5 @@
+import asyncio
+import time
 from typing import TYPE_CHECKING
 
 import pytest
@@ -29,11 +31,13 @@ class TestInProcessTaskBackend:
         backend: BaseTaskBackend = task_backends["default"]
         assert isinstance(backend, InProcessTaskBackend)
         now = timezone.now()
+        time.sleep(1)  # to avoid resolution issues
 
         task_result = backend.enqueue(sync_noop, (), {})
 
         assert request_finished.disconnect(dispatch_uid="_in_process_task_backend") is True
 
+        time.sleep(1)  # to avoid resolution issues
         assert isinstance(task_result, TaskResult)
         assert task_result.task is sync_noop
         assert task_result.status == TaskResultStatus.READY
@@ -52,11 +56,13 @@ class TestInProcessTaskBackend:
         backend: BaseTaskBackend = task_backends["default"]
         assert isinstance(backend, InProcessTaskBackend)
         now = timezone.now()
+        await asyncio.sleep(1)  # to avoid resolution issues
 
         task_result = await backend.aenqueue(sync_noop, (), {})
 
         assert request_finished.disconnect(dispatch_uid="_in_process_task_backend") is True
 
+        await asyncio.sleep(1)
         assert isinstance(task_result, TaskResult)
         assert task_result.task is sync_noop
         assert task_result.status == TaskResultStatus.READY

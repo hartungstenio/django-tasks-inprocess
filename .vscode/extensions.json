@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "github.vscode-github-actions",
+        "redhat.vscode-yaml",
+        "tombi-toml.tombi"
+    ]
+}
