@@ -1,0 +1,178 @@
+[project]
+name = "django-tasks-inprocess"
+description = "A Django Tasks backend inspired by Starlette's In-process Background Workers"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+  { name = "Christian Hartung", email = "6785871+hartungstenio@users.noreply.github.com" },
+]
+keywords = []
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
+  "Framework :: Django",
+  "Framework :: Django :: 6.0",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Internet :: WWW/HTTP",
+  "Typing :: Typed"
+]
+dependencies = [
+  "django>=6.0",
+]
+dynamic = ["version"]
+
+[project.urls]
+Documentation = "https://github.com/hartungstenio/django-tasks-inprocess#readme"
+Issues = "https://github.com/hartungstenio/django-tasks-inprocess/issues"
+Source = "https://github.com/hartungstenio/django-tasks-inprocess"
+
+
+[dependency-groups]
+dev = [
+  "coverage[toml]>=6.5",
+  "pre-commit",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-django",
+]
+
+[build-system]
+requires = ["hatch-vcs", "hatchling"]
+build-backend = "hatchling.build"
+
+[tool.coverage.run]
+source_pkgs = ["django_tasks_inprocess", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/django_tasks_inprocess/__about__.py",
+]
+
+[tool.coverage.paths]
+django_tasks_inprocess = [
+  "src/django_tasks_inprocess",
+  "*/django-tasks-inprocess/src/django_tasks_inprocess"
+]
+tests = ["tests", "*/django-tasks-inprocess/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.envs.default]
+dependency-groups = ["dev"]
+
+[tool.hatch.envs.hatch-test]
+extra-dependencies = [
+  "faker",
+  "pytest-asyncio",
+  "pytest-django",
+]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+django = ["6.0"]
+python = ["3.12", "3.13", "3.14"]
+
+[tool.hatch.envs.hatch-test.overrides]
+matrix.django.dependencies = [
+  { value = "django>=6.0,<6.1", if = ["6.0"] },
+]
+
+[tool.hatch.envs.hatch-static-analysis]
+config-path = "none"
+dependencies = ["ruff==0.15.*"]
+
+[tool.pytest]
+pythonpath = [".", "src"]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+  "ERA",
+  "ANN",
+  "ASYNC",
+  "S",
+  "BLE",
+  "FBT",
+  "B",
+  "A",
+  "COM818",
+  "C4",
+  "DTZ",
+  "T10",
+  "DJ",
+  "EM",
+  "EXE",
+  "INT",
+  "ISC",
+  "ICN",
+  "LOG",
+  "G",
+  "PIE",
+  "T20",
+  "PYI",
+  "PT",
+  "RSE",
+  "RET",
+  "SLF",
+  "SIM",
+  "SLOT",
+  "TID",
+  "TD",
+  "TC",
+  "PTH",
+  "FLY",
+  "I",
+  "C90",
+  "N",
+  "PERF",
+  "E",
+  "W",
+  "D",
+  "F",
+  "PGH",
+  "PL",
+  "UP",
+  "FURB",
+  "RUF",
+  "TRY",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.ruff.lint.per-file-ignores]
+"manage.py" = ["PLC", "ANN"]
+"*/models.py" = ["D106"]
+"*/apps.py" = ["D100"]
+"*/urls.py" = ["D100"]
+"*/migrations/*.py" = ["D", "RUF012"]
+"tests/*.py" = ["D", "S101"]
