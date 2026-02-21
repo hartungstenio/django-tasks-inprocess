@@ -10,5 +10,8 @@
             "source.organizeImports": "explicit"
         },
         "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tombi-toml.tombi"
     }
 }
