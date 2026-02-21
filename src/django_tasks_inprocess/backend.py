@@ -3,7 +3,7 @@
 import asyncio
 from collections import deque
 from collections.abc import Mapping, Sequence
-from contextvars import ContextVar, Token
+from contextvars import ContextVar
 from traceback import format_exception
 from typing import Any, Final, TypedDict, override
 

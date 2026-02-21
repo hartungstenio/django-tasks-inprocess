@@ -170,7 +170,7 @@ convention = "pep257"
 ban-relative-imports = "parents"
 
 [tool.ruff.lint.per-file-ignores]
-"manage.py" = ["PLC", "ANN"]
+"manage.py" = ["PLC", "ANN", "D"]
 "*/models.py" = ["D106"]
 "*/apps.py" = ["D100"]
 "*/urls.py" = ["D100"]
