@@ -7,7 +7,9 @@ from contextvars import ContextVar
 from traceback import format_exception
 from typing import Any, Final, TypedDict, override
 
+from asgiref.sync import sync_to_async
 from django.core.signals import request_finished
+from django.db import close_old_connections
 from django.tasks.backends.base import BaseTaskBackend
 from django.tasks.base import Task, TaskContext, TaskError, TaskResult, TaskResultStatus
 from django.tasks.signals import task_enqueued, task_finished, task_started
@@ -144,6 +146,8 @@ class InProcessTaskBackend(BaseTaskBackend):
         else:
             while queued_tasks:
                 self._execute_task(queued_tasks.pop())
+        finally:
+            close_old_connections()
 
     async def _aexecute_task(self, task_result: TaskResult) -> None:
         """Execute the Task for the given TaskResult, mutating it with the outcome."""
@@ -202,3 +206,5 @@ class InProcessTaskBackend(BaseTaskBackend):
             async with asyncio.TaskGroup() as tg:
                 while queued_tasks:
                     tg.create_task(self._aexecute_task(queued_tasks.pop()))
+        finally:
+            await sync_to_async(close_old_connections)()

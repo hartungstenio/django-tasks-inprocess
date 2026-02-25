@@ -1,6 +1,7 @@
 import asyncio
 import time
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 from django.core.signals import request_finished
@@ -13,6 +14,8 @@ from .tasks import async_noop, sync_noop
 
 if TYPE_CHECKING:
     from django.tasks.backends.base import BaseTaskBackend
+
+pytestmark = pytest.mark.django_db
 
 
 class TestInProcessTaskBackend:
@@ -76,27 +79,34 @@ class TestInProcessTaskBackend:
         assert task_result.errors == []
         assert task_result.worker_ids == []
 
-    def test_execute_tasks(self, subtests: pytest.Subtests) -> None:
+    @mock.patch("django_tasks_inprocess.backend.close_old_connections")
+    def test_execute_tasks(self, mock_close_old_connections: mock.Mock, subtests: pytest.Subtests) -> None:
         backend: BaseTaskBackend = task_backends["default"]
         assert isinstance(backend, InProcessTaskBackend)
+
         try:
             with subtests.test("Single sync task"):
+                mock_close_old_connections.reset_mock()
                 task_result = backend.enqueue(sync_noop, (), {})
 
                 got = request_finished.send(None)
 
                 assert task_result.status == TaskResultStatus.SUCCESSFUL
                 assert any(result is None for receiver, result in got if receiver == backend.execute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
             with subtests.test("Single async task"):
+                mock_close_old_connections.reset_mock()
                 task_result = backend.enqueue(async_noop, (), {})
 
                 got = request_finished.send(None)
 
                 assert task_result.status == TaskResultStatus.SUCCESSFUL
                 assert any(result is None for receiver, result in got if receiver == backend.execute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
             with subtests.test("Multiple tasks"):
+                mock_close_old_connections.reset_mock()
                 task_results = [backend.enqueue(sync_noop, (), {}) for _ in range(5)]
                 task_results.extend([backend.enqueue(async_noop, (), {}) for _ in range(5)])
 
@@ -104,37 +114,46 @@ class TestInProcessTaskBackend:
 
                 assert all(task_result.status == TaskResultStatus.SUCCESSFUL for task_result in task_results)
                 assert any(result is None for receiver, result in got if receiver == backend.execute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
             with subtests.test("Without tasks"):
+                mock_close_old_connections.reset_mock()
                 got = request_finished.send(None)
 
                 assert any(result is None for receiver, result in got if receiver == backend.execute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
         finally:
             assert request_finished.disconnect(dispatch_uid="_in_process_task_backend") is True
 
     @pytest.mark.asyncio
-    async def test_execute_tasks_async(self, subtests: pytest.Subtests) -> None:
+    @mock.patch("django_tasks_inprocess.backend.close_old_connections")
+    async def test_execute_tasks_async(self, mock_close_old_connections: mock.Mock, subtests: pytest.Subtests) -> None:
         backend: BaseTaskBackend = task_backends["default"]
         assert isinstance(backend, InProcessTaskBackend)
         try:
             with subtests.test("Single sync task"):
+                mock_close_old_connections.reset_mock()
                 task_result = await backend.aenqueue(sync_noop, (), {})
 
                 got = await request_finished.asend(None)
 
                 assert task_result.status == TaskResultStatus.SUCCESSFUL
                 assert any(result is None for receiver, result in got if receiver == backend.aexecute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
             with subtests.test("Single async task"):
+                mock_close_old_connections.reset_mock()
                 task_result = await backend.aenqueue(async_noop, (), {})
 
                 got = await request_finished.asend(None)
 
                 assert task_result.status == TaskResultStatus.SUCCESSFUL
                 assert any(result is None for receiver, result in got if receiver == backend.aexecute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
             with subtests.test("Multiple tasks"):
+                mock_close_old_connections.reset_mock()
                 task_results = [backend.enqueue(sync_noop, (), {}) for _ in range(5)]
                 task_results.extend([backend.enqueue(async_noop, (), {}) for _ in range(5)])
 
@@ -142,11 +161,14 @@ class TestInProcessTaskBackend:
 
                 assert all(task_result.status == TaskResultStatus.SUCCESSFUL for task_result in task_results)
                 assert any(result is None for receiver, result in got if receiver == backend.aexecute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
             with subtests.test("Without tasks"):
+                mock_close_old_connections.reset_mock()
                 got = await request_finished.asend(None)
 
                 assert any(result is None for receiver, result in got if receiver == backend.aexecute_tasks)
+                mock_close_old_connections.assert_called_once_with()
 
         finally:
             assert request_finished.disconnect(dispatch_uid="_in_process_task_backend") is True
