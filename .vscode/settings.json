@@ -1,4 +1,5 @@
 {
+    "workbench.editor.enablePreview": false,
     "python.testing.pytestArgs": [
         "tests"
     ],
